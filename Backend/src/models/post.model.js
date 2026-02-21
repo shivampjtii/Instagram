@@ -13,7 +13,15 @@ const postSchema = new mongoose.Schema({
         ref:"users",
         type:mongoose.Schema.Types.ObjectId,
         required:[true, "User id is required for creating the post"]
-    }
+    },
+    followers:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'users'
+    }],
+    following:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'users'
+    }]
 })
 
 const postModel = mongoose.model("posts",postSchema);
