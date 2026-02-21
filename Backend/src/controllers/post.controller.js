@@ -8,27 +8,6 @@ const imagekit = new ImageKit({
 });
 
 const createPostController = async (req,res)=>{
-    console.log(req.body, req.file);
-
-    const token = req.cookies.token;
-
-    if(!token){
-        return res.status(401).json({
-            message:"Token not provided, Unauthorized access"
-        })
-    }
-
-    let decoded = null;
-    try{
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-    }catch(err){
-        return res.status(401).json({
-            message:"user not authorized"
-        })
-    }
-
-
-
     const file = await imagekit.files.upload({
         file:await toFile(Buffer.from(req.file.buffer), 'file'),
         fileName:"Test",
@@ -38,7 +17,7 @@ const createPostController = async (req,res)=>{
     const post = await postModel.create({
         caption:req.body.caption,
         imgUrl:file.url,
-        user:decoded.id
+        user:req.user.id
     })
 
 
@@ -51,17 +30,7 @@ const createPostController = async (req,res)=>{
 }
 
 const getPostController = async (req,res)=>{
-    const token = req.cookies.token;
-    let decoded = null;
-    try{
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-    }catch(err){
-        return res.status(401).json({
-            message:"Token invalid"
-        })
-    }
-
-    const userId = decoded.id;
+    const userId = req.user.id;
 
     const posts = await postModel.find({
         user:userId
@@ -74,23 +43,8 @@ const getPostController = async (req,res)=>{
 }
 
 const getPostDetailsController = async (req,res)=>{
-    const token = req.cookies.token;
-    if(!token){
-        return res.status(401).json({
-            message:"Unauthorized access"
-        })
-    }
 
-    let decoded;
-    try{
-        decoded = jwt.verify(token,process.env.JWT_SECRET);
-    }catch(err){
-        return res.status(401).json({
-            message:"Invalid token"
-        })
-    }
-
-    const userId = decoded.id;
+    const userId = req.user.id;
     const postId = req.params.postId;
     const post = await postModel.findById(postId);
 
