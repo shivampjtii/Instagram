@@ -1,4 +1,5 @@
 const userModel = require("../models/user.model");
+const bcrypt = require("bcryptjs")
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken")
 
@@ -17,8 +18,7 @@ const loginController = async (req,res)=>{
         })
     }
 
-    const hash = crypto.createHash('sha256').update(password).digest("hex");
-    const isPasswordValid = hash === user.password;
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if(!isPasswordValid){
         return res.status(401).json({
@@ -46,6 +46,7 @@ const loginController = async (req,res)=>{
 
 const registerController = async (req,res)=>{
     const {username,email,password,bio,profileImage} = req.body;
+    console.log(username,email,password,bio);
     const isUserExists = await userModel.findOne({
         $or:[
             {username},
@@ -59,7 +60,7 @@ const registerController = async (req,res)=>{
         })
     }
 
-    const hash = crypto.createHash('sha256').update(password).digest("hex");
+    const hash = await bcrypt.hash(password,10);
 
     const user = await userModel.create({
         username,
@@ -70,9 +71,7 @@ const registerController = async (req,res)=>{
     })
 
     const token = jwt.sign({
-        id:user._id,
-        email:user.email,
-        username:user.username
+        id:user._id
     },process.env.JWT_SECRET, {expiresIn:'1d'});
 
     res.cookie("token", token);
